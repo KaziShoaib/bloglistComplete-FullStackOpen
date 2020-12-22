@@ -1,4 +1,5 @@
 //jest test files should have .test in their name
+// tests for the various functions in ../utils/list_helper
 
 const listHelper = require('../utils/list_helper');
 
@@ -50,7 +51,7 @@ const listWithMultipleBlogs = [
     _id: '5a422b891b54a676234d17fa',
     title: 'First class tests',
     author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll',
+    url: 'http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.html',
     likes: 10,
     __v: 0
   },

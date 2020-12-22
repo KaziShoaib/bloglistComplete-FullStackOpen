@@ -1,3 +1,6 @@
+// functions for learning various operations on a given list of blogs
+// none of them are connected to the backend
+
 const _ = require('lodash');
 
 const dummy = (blogs) => {

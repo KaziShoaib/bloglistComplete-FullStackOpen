@@ -1,5 +1,12 @@
 const config = require('./utils/config');
 const express = require('express');
+/*
+we can remove the try catch blocks from the routers  inside controllers
+with the express-async-errors library
+if an exception occurs in an async function this library will automatically
+forward that to the error handler middleware
+*/
+require('express-async-errors');
 const app = express();
 const cors = require('cors');
 const blogsRouter = require('./controllers/blogs');
