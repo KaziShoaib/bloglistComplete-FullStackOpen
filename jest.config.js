@@ -1,6 +1,10 @@
 module.exports = {
-  'testEnvironment':'node'
+  'testEnvironment':'node',
+  setupFilesAfterEnv: ['./jest.setup.js']
 };
+/*
+the jest.setup.js file increases the timeoutfor all tests
+*/
 
 /* alternatively we can also write
 {
