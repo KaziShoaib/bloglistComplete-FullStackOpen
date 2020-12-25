@@ -1,6 +1,7 @@
 // helper file for blog_api.test.js
 
 const Blog = require('../models/blog');
+const User = require('../models/user');
 
 const initialBlogs = [
   {
@@ -46,4 +47,15 @@ const removeIdFromModelBlogObjects = (blogs) => {
   });
 };
 
-module.exports = { initialBlogs, nonExistingId, blogsInDB, removeIdFromModelBlogObjects };
+const usersInDB = async () => {
+  const users = await User.find({});
+  return users.map(u => u.toJSON());
+};
+
+module.exports = {
+  initialBlogs,
+  nonExistingId,
+  blogsInDB,
+  removeIdFromModelBlogObjects,
+  usersInDB
+};

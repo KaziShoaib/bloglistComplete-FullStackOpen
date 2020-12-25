@@ -1,5 +1,7 @@
 const blogsRouter = require('express').Router();
 const Blog = require('../models/blog');
+const User = require('../models/user');
+const jwt = require('jsonwebtoken');
 
 blogsRouter.get('/', async (request, response) => {
   // old style .then chains
@@ -7,7 +9,13 @@ blogsRouter.get('/', async (request, response) => {
   //   .then(returnedBlogs => returnedBlogs.map(blog => blog.toJSON()))
   //   .then(returnedAndFormattedBlogs => response.json(returnedAndFormattedBlogs));
 
-  const blogs = await Blog.find({});
+  //populate will take the ids saved in the user field of the blog model
+  //then fetch user objects using those ids
+  //there is a ref:'User' in the blog model definition
+  //username:1, name:1 means that
+  //we only want to see the username and name of the fetched users
+  const blogs = await Blog
+    .find({}).populate('user', { username:1, name:1 });
   response.json(blogs);
 });
 
@@ -15,11 +23,24 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response, next) => {
   const body = request.body;
 
+  //the authorization token that comes with the 'Authorization' request headers
+  //is assigned to the request object as a property .token by the tokenExtractor middleware
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
+
+  //the missing or incorrect token problems are handled by the errorHandler middleware
+  //this if block does not seem to do anything
+  if(!request.token || !decodedToken.id){
+    return response.status(401).json({ error: 'token missing or invalid' });
+  }
+
+  const user = await User.findById(decodedToken.id);
+
   const blog = new Blog({
     title: body.title,
     author: body.author || 'unknown',
     url: body.url,
-    likes: body.likes || 0
+    likes: body.likes || 0,
+    user: user._id
   });
 
   // old style .then chains
@@ -39,14 +60,42 @@ blogsRouter.post('/', async (request, response, next) => {
   // }
 
   const savedBlog = await blog.save();
+
+  // we need to add the savedBlog's id to the user's blogs list
+  user.blogs = user.blogs.concat(savedBlog._id);
+  await user.save();
+
   response.status(201).json(savedBlog);
 });
 
 
 blogsRouter.delete('/:id', async (request, response) => {
+  //the authorization token that comes with the 'Authorization' request headers
+  //is assigned to the request object as a property .token by the tokenExtractor middleware
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
+
+  //the missing or incorrect token problems are handled by the errorHandler middleware
+  //this if block does not seem to do anything
+  if(!request.token || !decodedToken.id){
+    return response.status(401).json({ error: 'token missing or invalid' });
+  }
+
+  // checking if this blog was created by the currently logged in user
+  const user = await User.findById(decodedToken.id);
+  const blog = await Blog.findById(request.params.id);
+
+  if(!(user && blog && blog.user.toString() === user._id.toString())){
+    return response.status(401).json({ error: 'a blog can only be deleted by it\'s creator' });
+  }
+
   // the express-async-errors library will
   // transfer the exceptions to the errorHandler middleware
   await Blog.findByIdAndDelete(request.params.id);
+
+  //removing the deleted blog's id from the user's blogs array
+  user.blogs = user.blogs.filter(blogId => blogId.toString() !== request.params.id);
+  await user.save();
+
   response.status(204).end();
 });
 

@@ -3,10 +3,12 @@
 
 const mongoose = require('mongoose');
 const supertest = require('supertest');
+const bcrypt = require('bcryptjs');
 const helper = require('./test_helper');
 const app = require('../app');
 const api = supertest(app);
 const Blog = require('../models/blog');
+const User = require('../models/user');
 
 
 beforeEach( async () => {
@@ -173,6 +175,91 @@ describe('editing an existing blog', () => {
   });
 
 });
+
+
+describe('whene there is initially one user in db', () => {
+
+
+  beforeEach(async () => {
+    await User.deleteMany({});
+    const passwordHash = await bcrypt.hash('sekret',10);
+    const user = new User({
+      username:'root',
+      name:'admin',
+      passwordHash
+    });
+    await user.save();
+  });
+
+
+  test.only('creation succeeds with fresh username', async () => {
+    const usersAtStart = await helper.usersInDB();
+
+    const newUser = {
+      username: 'mluukkai',
+      name: 'Matti Luukkainen',
+      password: 'salainen',
+    };
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(200)
+      .expect('Content-Type', /application\/json/);
+
+    const usersAtEnd = await helper.usersInDB();
+    expect(usersAtEnd).toHaveLength(usersAtStart.length + 1);
+
+    const usernames = usersAtEnd.map(u => u.username);
+    expect(usernames).toContain(newUser.username);
+  });
+
+  test.only('creation fails with proper statuscode and message if username is already taken', async () => {
+    const usersAtStart = await helper.usersInDB();
+
+    const newUser = {
+      username: 'root',
+      name: 'superUser',
+      password: 'salainen'
+    };
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/);
+
+    const usersAtEnd = await helper.usersInDB();
+    expect(usersAtEnd).toHaveLength(usersAtStart.length);
+
+    expect(result.body.error).toContain('`username` to be unique');
+  });
+
+
+  test.only('creation fails with proper statuscode and message if password is smaller than minimum length', async () => {
+    const usersAtStart = await helper.usersInDB();
+
+    const newUser = {
+      'username':'jafarAhamed',
+      'password': 'p',
+      'name': 'test'
+    };
+
+    //this error is handled in the users controller
+    //not in the errorHandler middleware
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/);
+
+    expect(result.body.error).toBe('password must be at least 3 characters long');
+
+    const usersAtEnd = await helper.usersInDB();
+    expect(usersAtEnd).toHaveLength(usersAtStart.length);
+  });
+});
+
 
 afterAll(() => {
   mongoose.connection.close();
