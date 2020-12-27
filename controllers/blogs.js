@@ -115,7 +115,7 @@ blogsRouter.put('/:id', async (request, response) => {
     title : request.body.title || oldBlog.title,
     author : request.body.author || oldBlog.author,
     url : request.body.url || oldBlog.url,
-    likes : request.body.likes || oldBlog.likes
+    likes : request.body.likes === undefined ? oldBlog.likes : request.body.likes
   };
 
   //normally validators don't work while editing
@@ -124,7 +124,7 @@ blogsRouter.put('/:id', async (request, response) => {
   // new : true will make it return the new edited object
   // the exceptins are forwarded to the errorHandler middleware
   // by the express-async-errors library
-  const editedBlog = await Blog.findByIdAndUpdate(request.params.id, newBlog, { new : true, runValidators : true });
+  let editedBlog = await Blog.findByIdAndUpdate(request.params.id, newBlog, { new : true, runValidators : true });
   if(editedBlog){
     response.json(editedBlog.toJSON());
   }
