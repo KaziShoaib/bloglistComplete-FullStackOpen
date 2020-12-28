@@ -108,15 +108,27 @@ blogsRouter.delete('/:id', async (request, response) => {
 
 
 blogsRouter.put('/:id', async (request, response) => {
-  const oldBlog = await Blog.findById(request.params.id);
+  //oldcode
+  //const oldBlog = await Blog.findById(request.params.id);
   //the edited object is not a model
   //it's a normal javascript object
-  const newBlog = {
-    title : request.body.title || oldBlog.title,
-    author : request.body.author || oldBlog.author,
-    url : request.body.url || oldBlog.url,
-    likes : request.body.likes === undefined ? oldBlog.likes : request.body.likes
-  };
+  // const newBlog = {
+  //   title : request.body.title || oldBlog.title,
+  //   author : request.body.author || oldBlog.author,
+  //   url : request.body.url || oldBlog.url,
+  //   likes : request.body.likes === undefined ? oldBlog.likes : request.body.likes
+  // };
+
+
+  const keys = ['title', 'author', 'url', 'likes'];
+  //the edited object is not a model
+  //it's a normal javascript object
+  let newBlog = {};
+  keys.forEach(key => {
+    if(request.body[key] !== undefined){
+      newBlog[key] = request.body[key];
+    }
+  });
 
   //normally validators don't work while editing
   //adding runValidators : true will enforce validations during editing
