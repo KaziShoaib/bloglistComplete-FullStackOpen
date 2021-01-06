@@ -20,6 +20,7 @@ blogsRouter.get('/', async (request, response) => {
 });
 
 
+// eslint-disable-next-line no-unused-vars
 blogsRouter.post('/', async (request, response, next) => {
   const body = request.body;
 
@@ -37,7 +38,7 @@ blogsRouter.post('/', async (request, response, next) => {
 
   const blog = new Blog({
     title: body.title,
-    author: body.author || 'unknown',
+    author: body.author,
     url: body.url,
     likes: body.likes || 0,
     user: user._id
