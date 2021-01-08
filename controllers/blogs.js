@@ -121,7 +121,7 @@ blogsRouter.put('/:id', async (request, response) => {
   // };
 
 
-  const keys = ['title', 'author', 'url', 'likes'];
+  const keys = ['title', 'author', 'url', 'likes', 'comments'];
   //the edited object is not a model
   //it's a normal javascript object
   let newBlog = {};
